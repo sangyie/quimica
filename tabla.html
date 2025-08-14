@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tabla Periódica Interactiva</title>
+<header class="navbar">
+  <div class="logo">Química</div>
+  <nav id="nav-menu" class="nav-links">
+    <a href="index.html">Inicio</a>
+    <a href="conceptos.html">Conceptos</a>
+    <a href="ejercicios.html">Ejercicios</a>
+    <a href="registro.html">Registro</a>
+  </nav>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Abrir menú">&#9776;</button>
+</header>
+<style>
+/* Navbar para el menu*/
+.navbar {
+  width: 100%;
+  background-color: #111;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 10000;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.logo {
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.2rem;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #fff;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+.nav-links a:hover {
+  color: #66ccff;
+}
+
+/* Botón hamburguesa */
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Responsive navbar */
+@media (max-width: 768px) {
+  .nav-links {
+    position: absolute;
+    top: 60px;
+    right: 0;
+    background-color: #111;
+    flex-direction: column;
+    width: 100%;
+    display: none;
+    padding: 1rem 0;
+  }
+  .nav-links.show {
+    display: flex;
+  }
+  .nav-toggle {
+    display: block;
+  }
+}
+/*final del menu inicio*/
+
+
+  /* Reset y estilos base */
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin: 0; padding: 0; height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #eee;
+    overflow-x: hidden;
+  }
+  body {
+    position: relative;
+    background: #0a0f20;
+  }
+
+  /* Canvas para partículas */
+  #fondo-particulas {
+    position: fixed;
+    top:0; left:0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    background: #0a0f20;
+  }
+
+  h1 {
+    margin: 20px 0 10px;
+    text-align: center;
+    font-weight: 700;
+    text-shadow: 0 0 10px #00aaff;
+  }
+
+  /* Contenedor tabla periódica */
+  #tabla-periodica {
+    display: grid;
+    grid-template-columns: repeat(18, minmax(40px, 1fr));
+    gap: 5px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto 30px;
+  }
+  /* Estilos botón elemento (sin categorías, color uniforme) */
+  .elemento {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 8px 5px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.25s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    color: #c0d8f8;
+    font-weight: 600;
+  }
+  .elemento:hover {
+    background-color: rgba(0, 170, 255, 0.3);
+    transform: scale(1.15);
+    box-shadow: 0 0 12px 3px #00aaff;
+    z-index: 10;
+    position: relative;
+  }
+  .elemento .numero {
+    font-size: 0.65rem;
+    opacity: 0.6;
+  }
+  .elemento .simbolo {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 4px 0 2px;
+  }
+  .elemento .nombre {
+    font-size: 0.55rem;
+    text-transform: capitalize;
+    opacity: 0.75;
+  }
+  /* Vacíos */
+  .empty {
+    background: transparent;
+    pointer-events: none;
+    border: none;
+  }
+
+  /* Buscador */
+  #buscador {
+    margin: 0 auto 20px;
+    display: block;
+    width: 320px;
+    max-width: 90vw;
+    padding: 10px 15px;
+    font-size: 1rem;
+    border-radius: 12px;
+    border: none;
+    outline: none;
+    background: rgba(255,255,255,0.1);
+    color: #eef7ff;
+    box-shadow: 0 0 8px rgba(0,170,255,0.3);
+    transition: background 0.3s ease;
+  }
+  #buscador::placeholder {
+    color: #aaccee;
+  }
+  #buscador:focus {
+    background: rgba(255,255,255,0.2);
+  }
+
+  /* Modal */
+  #modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10,15,32,0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 1000;
+  }
+  #modal.active {
+    display: flex;
+  }
+  #modal-content {
+    background: #13203a;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 100%;
+    padding: 25px 30px;
+    color: #cde7ff;
+    position: relative;
+    overflow-y: auto;
+    max-height: 85vh;
+    box-shadow: 0 0 30px #00aaffaa;
+  }
+  #modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    text-shadow: 0 0 10px #00aaff;
+  }
+  #modal-content p {
+    margin: 8px 0;
+    font-size: 0.95rem;
+  }
+  #modal-content a {
+    color: #00bbff;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  #modal-content a:hover {
+    text-decoration: underline;
+  }
+  #cerrar-modal {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 1.8rem;
+    cursor: pointer;
+    font-weight: bold;
+    color: #77bbffaa;
+    transition: color 0.3s ease;
+  }
+  #cerrar-modal:hover, #cerrar-modal:focus {
+    color: #00aaff;
+    outline: none;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    #tabla-periodica {
+      grid-template-columns: repeat(9, minmax(30px, 1fr));
+    }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="fondo-particulas"></canvas>
+
+<h1>Tabla Periódica Interactiva</h1>
+
+<input type="text" id="buscador" placeholder="Buscar por nombre, símbolo o número..." aria-label="Buscar elemento" />
+
+<div id="tabla-periodica" role="grid" aria-label="Tabla periódica de elementos">
+  <!-- Elementos se generan dinámicamente -->
+</div>
+
+<!-- Modal para detalles -->
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div id="modal-content">
+    <span id="cerrar-modal" aria-label="Cerrar modal" role="button" tabindex="0">&times;</span>
+    <h2 id="modal-title"></h2>
+    <p id="modal-number"></p>
+    <p id="modal-category"></p>
+    <p id="modal-mass"></p>
+    <p id="modal-electron-config"></p>
+    <p id="modal-electron-distribution"></p>
+    <p><a id="modal-wikipedia" href="#" target="_blank" rel="noopener noreferrer" tabindex="0">Laaaaaaaaaeer más en Wikipedia</a></p>
+  </div>
+</div>
+
+<script>
+// Datos de los elementos: por brevedad solo algunos; completa con todos igual
+const elementos = [
+  {"name":"Hidrógeno","symbol":"H","number":1,"category":"no categorizado","atomic_mass":1.008,"electron_configuration":"1s1","electron_distribution":"1 electrón en capa 1","xpos":1,"ypos":1,"wikipedia":"https://es.wikipedia.org/wiki/Hidrógeno"},
+  {"name":"Helio","symbol":"He","number":2,"category":"no categorizado","atomic_mass":4.002602,"electron_configuration":"1s2","electron_distribution":"2 electrones en capa 1","xpos":18,"ypos":1,"wikipedia":"https://es.wikipedia.org/wiki/Helio"},
+  {"name":"Litio","symbol":"Li","number":3,"category":"no categorizado","atomic_mass":6.94,"electron_configuration":"[He] 2s1","electron_distribution":"1 electrón en capa 2","xpos":1,"ypos":2,"wikipedia":"https://es.wikipedia.org/wiki/Litio"},
+  {"name":"Berilio","symbol":"Be","number":4,"category":"no categorizado","atomic_mass":9.0122,"electron_configuration":"[He] 2s2","electron_distribution":"2 electrones en capa 2","xpos":2,"ypos":2,"wikipedia":"https://es.wikipedia.org/wiki/Berio"},
+  {"name":"Boro","symbol":"B","number":5,"category":"no categorizado","atomic_mass":10.81,"electron_configuration":"[He] 2s2 2p1","electron_distribution":"2 s y 1 p en capa 2","xpos":13,"ypos":2,"wikipedia":"https://es.wikipedia.org/wiki/Boro"},
+  {"name":"Carbono","symbol":"C","number":6,"category":"no categorizado","atomic_mass":12.011,"electron_configuration":"[He] 2s2 2p2","electron_distribution":"2 s y 2 p en capa 2","xpos":14,"ypos":2,"wikipedia":"https://es.wikipedia.org/wiki/Carbono"},
+  {"name":"Nitrógeno","symbol":"N","number":7,"category":"no categorizado","atomic_mass":14.007,"electron_configuration":"[He] 2s2 2p3","electron_distribution":"2 s y 3 p en capa 2","xpos":15,"ypos":2,"wikipedia":"https://es.wikipedia.org/wiki/Nitrógeno"},
+  {"name":"Oxígeno","symbol":"O","number":8,"category":"no categorizado","atomic_mass":15.999,"electron_configuration":"[He] 2s2 2p4","electron_distribution":"2 s y 4 p en capa 2","xpos":16,"ypos":2,"wikipedia":"https://es.wikipedia.org/wiki/Oxígeno"},
+  {"name":"Flúor","symbol":"F","number":9,"category":"no categorizado","atomic_mass":18.998,"electron_configuration":"[He] 2s2 2p5","electron_distribution":"2 s y 5 p en capa 2","xpos":17,"ypos":2,"wikipedia":"https://es.wikipedia.org/wiki/Flúor"},
+  {"name":"Neón","symbol":"Ne","number":10,"category":"no categorizado","atomic_mass":20.180,"electron_configuration":"[He] 2s2 2p6","electron_distribution":"2 s y 6 p en capa 2","xpos":18,"ypos":2,"wikipedia":"https://es.wikipedia.org/wiki/Neón"},
+  
+  // Segunda fila
+  {"name":"Sodio","symbol":"Na","number":11,"category":"no categorizado","atomic_mass":22.990,"electron_configuration":"[Ne] 3s1","electron_distribution":"1 electrón en capa 3","xpos":1,"ypos":3,"wikipedia":"https://es.wikipedia.org/wiki/Sodio"},
+  {"name":"Magnesio","symbol":"Mg","number":12,"category":"no categorizado","atomic_mass":24.305,"electron_configuration":"[Ne] 3s2","electron_distribution":"2 electrones en capa 3","xpos":2,"ypos":3,"wikipedia":"https://es.wikipedia.org/wiki/Magnesio"},
+  {"name":"Aluminio","symbol":"Al","number":13,"category":"no categorizado","atomic_mass":26.982,"electron_configuration":"[Ne] 3s2 3p1","electron_distribution":"2 s y 1 p en capa 3","xpos":13,"ypos":3,"wikipedia":"https://es.wikipedia.org/wiki/Aluminio"},
+  {"name":"Silicio","symbol":"Si","number":14,"category":"no categorizado","atomic_mass":28.085,"electron_configuration":"[Ne] 3s2 3p2","electron_distribution":"2 s y 2 p en capa 3","xpos":14,"ypos":3,"wikipedia":"https://es.wikipedia.org/wiki/Silicio"},
+  {"name":"Fósforo","symbol":"P","number":15,"category":"no categorizado","atomic_mass":30.974,"electron_configuration":"[Ne] 3s2 3p3","electron_distribution":"2 s y 3 p en capa 3","xpos":15,"ypos":3,"wikipedia":"https://es.wikipedia.org/wiki/Fósforo"},
+  {"name":"Azufre","symbol":"S","number":16,"category":"no categorizado","atomic_mass":32.06,"electron_configuration":"[Ne] 3s2 3p4","electron_distribution":"2 s y 4 p en capa 3","xpos":16,"ypos":3,"wikipedia":"https://es.wikipedia.org/wiki/Azufre"},
+  {"name":"Cloro","symbol":"Cl","number":17,"category":"no categorizado","atomic_mass":35.45,"electron_configuration":"[Ne] 3s2 3p5","electron_distribution":"2 s y 5 p en capa 3","xpos":17,"ypos":3,"wikipedia":"https://es.wikipedia.org/wiki/Cloro"},
+  {"name":"Argón","symbol":"Ar","number":18,"category":"no categorizado","atomic_mass":39.948,"electron_configuration":"[Ne] 3s2 3p6","electron_distribution":"2 s y 6 p en capa 3","xpos":18,"ypos":3,"wikipedia":"https://es.wikipedia.org/wiki/Argón"},
+
+    // Tercera fila (Metales de transición empiezan)
+  {"name":"Potasio","symbol":"K","number":19,"category":"no categorizado","atomic_mass":39.098,"electron_configuration":"[Ar] 4s1","electron_distribution":"1 electrón en capa 4","xpos":1,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Potasio"},
+  {"name":"Calcio","symbol":"Ca","number":20,"category":"no categorizado","atomic_mass":40.078,"electron_configuration":"[Ar] 4s2","electron_distribution":"2 electrones en capa 4","xpos":2,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Calcio"},
+  {"name":"Escandio","symbol":"Sc","number":21,"category":"no categorizado","atomic_mass":44.956,"electron_configuration":"[Ar] 3d1 4s2","electron_distribution":"1 d y 2 s en capa 4","xpos":3,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Escandio"},
+  {"name":"Titanio","symbol":"Ti","number":22,"category":"no categorizado","atomic_mass":47.867,"electron_configuration":"[Ar] 3d2 4s2","electron_distribution":"2 d y 2 s en capa 4","xpos":4,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Titanio"},
+  {"name":"Vanadio","symbol":"V","number":23,"category":"no categorizado","atomic_mass":50.942,"electron_configuration":"[Ar] 3d3 4s2","electron_distribution":"3 d y 2 s en capa 4","xpos":5,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Vanadio"},
+  {"name":"Cromo","symbol":"Cr","number":24,"category":"no categorizado","atomic_mass":51.996,"electron_configuration":"[Ar] 3d5 4s1","electron_distribution":"5 d y 1 s en capa 4","xpos":6,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Cromo"},
+  {"name":"Manganeso","symbol":"Mn","number":25,"category":"no categorizado","atomic_mass":54.938,"electron_configuration":"[Ar] 3d5 4s2","electron_distribution":"5 d y 2 s en capa 4","xpos":7,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Manganeso"},
+  {"name":"Hierro","symbol":"Fe","number":26,"category":"no categorizado","atomic_mass":55.845,"electron_configuration":"[Ar] 3d6 4s2","electron_distribution":"6 d y 2 s en capa 4","xpos":8,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Hierro"},
+  {"name":"Cobalto","symbol":"Co","number":27,"category":"no categorizado","atomic_mass":58.933,"electron_configuration":"[Ar] 3d7 4s2","electron_distribution":"7 d y 2 s en capa 4","xpos":9,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Cobalto"},
+  {"name":"Níquel","symbol":"Ni","number":28,"category":"no categorizado","atomic_mass":58.693,"electron_configuration":"[Ar] 3d8 4s2","electron_distribution":"8 d y 2 s en capa 4","xpos":10,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Níquel"},
+  {"name":"Cobre","symbol":"Cu","number":29,"category":"no categorizado","atomic_mass":63.546,"electron_configuration":"[Ar] 3d10 4s1","electron_distribution":"10 d y 1 s en capa 4","xpos":11,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Cobre"},
+  {"name":"Cinc","symbol":"Zn","number":30,"category":"no categorizado","atomic_mass":65.38,"electron_configuration":"[Ar] 3d10 4s2","electron_distribution":"10 d y 2 s en capa 4","xpos":12,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Cinc"},
+  {"name":"Galio","symbol":"Ga","number":31,"category":"no categorizado","atomic_mass":69.723,"electron_configuration":"[Ar] 3d10 4s2 4p1","electron_distribution":"10 d, 2 s y 1 p en capa 4","xpos":13,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Galio"},
+  {"name":"Germanio","symbol":"Ge","number":32,"category":"no categorizado","atomic_mass":72.630,"electron_configuration":"[Ar] 3d10 4s2 4p2","electron_distribution":"10 d, 2 s y 2 p en capa 4","xpos":14,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Germanio"},
+  {"name":"Arsénico","symbol":"As","number":33,"category":"no categorizado","atomic_mass":74.922,"electron_configuration":"[Ar] 3d10 4s2 4p3","electron_distribution":"10 d, 2 s y 3 p en capa 4","xpos":15,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Arsénico"},
+  {"name":"Selenio","symbol":"Se","number":34,"category":"no categorizado","atomic_mass":78.971,"electron_configuration":"[Ar] 3d10 4s2 4p4","electron_distribution":"10 d, 2 s y 4 p en capa 4","xpos":16,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Selenio"},
+  {"name":"Bromo","symbol":"Br","number":35,"category":"no categorizado","atomic_mass":79.904,"electron_configuration":"[Ar] 3d10 4s2 4p5","electron_distribution":"10 d, 2 s y 5 p en capa 4","xpos":17,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Bromo"},
+  {"name":"Kriptón","symbol":"Kr","number":36,"category":"no categorizado","atomic_mass":83.798,"electron_configuration":"[Ar] 3d10 4s2 4p6","electron_distribution":"10 d, 2 s y 6 p en capa 4","xpos":18,"ypos":4,"wikipedia":"https://es.wikipedia.org/wiki/Kriptón"},
+  
+  // Cuarta fila (Lantánidos)
+  {"name":"Rubidio","symbol":"Rb","number":37,"category":"no categorizado","atomic_mass":85.468,"electron_configuration":"[Kr] 5s1","electron_distribution":"1 electrón en capa 5","xpos":1,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Rubidio"},
+  {"name":"Estroncio","symbol":"Sr","number":38,"category":"no categorizado","atomic_mass":87.62,"electron_configuration":"[Kr] 5s2","electron_distribution":"2 electrones en capa 5","xpos":2,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Estroncio"},
+  {"name":"Itrio","symbol":"Y","number":39,"category":"no categorizado","atomic_mass":88.906,"electron_configuration":"[Kr] 4d1 5s2","electron_distribution":"1 d y 2 s en capa 5","xpos":3,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Itrio"},
+  {"name":"Circonio","symbol":"Zr","number":40,"category":"no categorizado","atomic_mass":91.224,"electron_configuration":"[Kr] 4d2 5s2","electron_distribution":"2 d y 2 s en capa 5","xpos":4,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Circonio"},
+  {"name":"Niobio","symbol":"Nb","number":41,"category":"no categorizado","atomic_mass":92.906,"electron_configuration":"[Kr] 4d4 5s1","electron_distribution":"4 d y 1 s en capa 5","xpos":5,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Niobio"},
+  {"name":"Molibdeno","symbol":"Mo","number":42,"category":"no categorizado","atomic_mass":95.95,"electron_configuration":"[Kr] 4d5 5s1","electron_distribution":"5 d y 1 s en capa 5","xpos":6,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Molibdeno"},
+  {"name":"Tecnecio","symbol":"Tc","number":43,"category":"no categorizado","atomic_mass":98,"electron_configuration":"[Kr] 4d5 5s2","electron_distribution":"5 d y 2 s en capa 5","xpos":7,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Tecnecio"},
+  {"name":"Rutenio","symbol":"Ru","number":44,"category":"no categorizado","atomic_mass":101.07,"electron_configuration":"[Kr] 4d7 5s1","electron_distribution":"7 d y 1 s en capa 5","xpos":8,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Rutenio"},
+  {"name":"Rodio","symbol":"Rh","number":45,"category":"no categorizado","atomic_mass":102.91,"electron_configuration":"[Kr] 4d8 5s1","electron_distribution":"8 d y 1 s en capa 5","xpos":9,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Rodio"},
+  {"name":"Paladio","symbol":"Pd","number":46,"category":"no categorizado","atomic_mass":106.42,"electron_configuration":"[Kr] 4d10","electron_distribution":"10 d en capa 5","xpos":10,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Paladio"},
+  {"name":"Plata","symbol":"Ag","number":47,"category":"no categorizado","atomic_mass":107.87,"electron_configuration":"[Kr] 4d10 5s1","electron_distribution":"10 d y 1 s en capa 5","xpos":11,"ypos":5,"wikipedia":"https://es.wikipedia.org"},
+  {"name":"Cadmio","symbol":"Cd","number":48,"category":"no categorizado","atomic_mass":112.41,"electron_configuration":"[Kr] 4d10 5s2","electron_distribution":"10 d y 2 s en capa 5","xpos":12,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Cadmio"},
+  {"name":"Indio","symbol":"In","number":49,"category":"no categorizado","atomic_mass":114.82,"electron_configuration":"[Kr] 4d10 5s2 5p1","electron_distribution":"10 d, 2 s y 1 p en capa 5","xpos":13,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Indio"},
+  {"name":"Estaño","symbol":"Sn","number":50,"category":"no categorizado","atomic_mass":118.71,"electron_configuration":"[Kr] 4d10 5s2 5p2","electron_distribution":"10 d, 2 s y 2 p en capa 5","xpos":14,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Estaño"},
+  {"name":"Antimonio","symbol":"Sb","number":51,"category":"no categorizado","atomic_mass":121.76,"electron_configuration":"[Kr] 4d10 5s2 5p3","electron_distribution":"10 d, 2 s y 3 p en capa 5","xpos":15,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Antimonio"},
+  {"name":"Telurio","symbol":"Te","number":52,"category":"no categorizado","atomic_mass":127.60,"electron_configuration":"[Kr] 4d10 5s2 5p4","electron_distribution":"10 d, 2 s y 4 p en capa 5","xpos":16,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Telurio"},
+  {"name":"Yodo","symbol":"I","number":53,"category":"no categorizado","atomic_mass":126.90,"electron_configuration":"[Kr] 4d10 5s2 5p5","electron_distribution":"10 d, 2 s y 5 p en capa 5","xpos":17,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Yodo"},
+  {"name":"Xenón","symbol":"Xe","number":54,"category":"no categorizado","atomic_mass":131.29,"electron_configuration":"[Kr] 4d10 5s2 5p6","electron_distribution":"10 d, 2 s y 6 p en capa 5","xpos":18,"ypos":5,"wikipedia":"https://es.wikipedia.org/wiki/Xenón"},
+  
+    // Quinta fila (Lantánidos aparte)
+  {"name":"Cesio","symbol":"Cs","number":55,"category":"no categorizado","atomic_mass":132.91,"electron_configuration":"[Xe] 6s1","electron_distribution":"1 electrón en capa 6","xpos":1,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Cesio"},
+  {"name":"Bario","symbol":"Ba","number":56,"category":"no categorizado","atomic_mass":137.33,"electron_configuration":"[Xe] 6s2","electron_distribution":"2 electrones en capa 6","xpos":2,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Bario"},
+  
+   // Lantánidos (periodo 6, posición especial)
+  {"name":"Lantano","symbol":"La","number":57,"category":"no categorizado","atomic_mass":138.91,"electron_configuration":"[Xe] 5d1 6s2","electron_distribution":"1 d, 2 s en capa 6","xpos":4,"ypos":9,"wikipedia":"https://es.wikipedia.org/wiki/Lantano"},
+  {"name":"Cerio","symbol":"Ce","number":58,"category":"no categorizado","atomic_mass":140.12,"electron_configuration":"[Xe] 4f1 5d1 6s2","electron_distribution":"1 f, 1 d, 2 s en capa 6","xpos":5,"ypos":9,"wikipedia":"https://es.wikipedia.org/wiki/Cerio"},
+  {"name":"Praseodimio","symbol":"Pr","number":59,"category":"no categorizado","atomic_mass":140.91,"electron_configuration":"[Xe] 4f3 6s2","electron_distribution":"3 f, 2 s en capa 6","xpos":6,"ypos":9,"wikipedia":"https://es.wikipedia.org/wiki/Praseodimio"},
+  {"name":"Neodimio","symbol":"Nd","number":60,"category":"no categorizado","atomic_mass":144.24,"electron_configuration":"[Xe] 4f4 6s2","electron_distribution":"4 f, 2 s en capa 6","xpos":7,"ypos":9,"wikipedia":"https://es.wikipedia.org/wiki/Neodimio"},
+  {"name":"Prometio","symbol":"Pm","number":61,"category":"no categorizado","atomic_mass":145,"electron_configuration":"[Xe] 4f5 6s2","electron_distribution":"5 f, 2 s en capa 6","xpos":8,"ypos":9,"wikipedia":"https://es.wikipedia.org/wiki/Prometio"},
+  {"name":"Samario","symbol":"Sm","number":62,"category":"no categorizado","atomic_mass":150.36,"electron_configuration":"[Xe] 4f6 6s2","electron_distribution":"6 f, 2 s en capa 6","xpos":9,"ypos":9,"wikipedia":"https://es.wikipedia.org/wiki/Samario"},
+  {"name":"Europio","symbol":"Eu","number":63,"category":"no categorizado","atomic_mass":151.96,"electron_configuration":"[Xe] 4f7 6s2","electron_distribution":"7 f, 2 s en capa 6","xpos":10,"ypos":9,"wikipedia":"https://es.wikipedia.org/wiki/Europio"},
+  {"name":"Gadolinio","symbol":"Gd","number":64,"category":"no categorizado","atomic_mass":157.25,"electron_configuration":"[Xe] 4f7 5d1 6s2","electron_distribution":"7 f, 1 d, 2 s en capa 6","xpos":11,"ypos":9,"wikipedia":"https://es.wikipedia.org/wiki/Gadolinio"},
+  {"name":"Terbio","symbol":"Tb","number":65,"category":"no categorizado","atomic_mass":158.93,"electron_configuration":"[Xe] 4f9 6s2","electron_distribution":"9 f, 2 s en capa 6","xpos":12,"ypos":9,"wikipedia":"https://es.wikipedia.org/wiki/Terbio"},
+  {"name":"Disprosio","symbol":"Dy","number":66,"category":"no categorizado","atomic_mass":162.50,"electron_configuration":"[Xe] 4f10 6s2","electron_distribution":"10 f, 2 s en capa 6","xpos":13,"ypos":9,"wikipedia":"https://es.wikipedia.org/wiki/Disprosio"},
+  {"name":"Holmio","symbol":"Ho","number":67,"category":"no categorizado","atomic_mass":164.93,"electron_configuration":"[Xe] 4f11 6s2","electron_distribution":"11 f, 2 s en capa 6","xpos":14,"ypos":9,"wikipedia":"https://es.wikipedia.org/wiki/Holmio"},
+  {"name":"Erbio","symbol":"Er","number":68,"category":"no categorizado","atomic_mass":167.26,"electron_configuration":"[Xe] 4f12 6s2","electron_distribution":"12 f, 2 s en capa 6","xpos":15,"ypos":9,"wikipedia":"https://es.wikipedia.org/wiki/Erbio"},
+  {"name":"Tulio","symbol":"Tm","number":69,"category":"no categorizado","atomic_mass":168.93,"electron_configuration":"[Xe] 4f13 6s2","electron_distribution":"13 f, 2 s en capa 6","xpos":16,"ypos":9,"wikipedia":"https://es.wikipedia.org/wiki/Tulio"},
+  {"name":"Iterbio","symbol":"Yb","number":70,"category":"no categorizado","atomic_mass":173.05,"electron_configuration":"[Xe] 4f14 6s2","electron_distribution":"14 f, 2 s en capa 6","xpos":17,"ypos":9,"wikipedia":"https://es.wikipedia.org/wiki/Iterbio"},
+  {"name":"Lutecio","symbol":"Lu","number":71,"category":"no categorizado","atomic_mass":174.97,"electron_configuration":"[Xe] 4f14 5d1 6s2","electron_distribution":"14 f, 1 d, 2 s en capa 6","xpos":18,"ypos":9,"wikipedia":"https://es.wikipedia.org/wiki/Lutecio"},
+
+  // Sexta fila (Actínidos)
+  {"name":"Hafnio","symbol":"Hf","number":72,"category":"no categorizado","atomic_mass":178.49,"electron_configuration":"[Xe] 4f14 5d2 6s2","electron_distribution":"14 f, 2 d, 2 s en capa 6","xpos":4,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Hafnio"},
+  {"name":"Tantalio","symbol":"Ta","number":73,"category":"no categorizado","atomic_mass":180.95,"electron_configuration":"[Xe] 4f14 5d3 6s2","electron_distribution":"14 f, 3 d, 2 s en capa 6","xpos":5,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Tantalio"},
+  {"name":"Wolframio","symbol":"W","number":74,"category":"no categorizado","atomic_mass":183.84,"electron_configuration":"[Xe] 4f14 5d4 6s2","electron_distribution":"14 f, 4 d, 2 s en capa 6","xpos":6,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Wolframio"},
+  {"name":"Renio","symbol":"Re","number":75,"category":"no categorizado","atomic_mass":186.21,"electron_configuration":"[Xe] 4f14 5d5 6s2","electron_distribution":"14 f, 5 d, 2 s en capa 6","xpos":7,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Renio"},
+  {"name":"Osmio","symbol":"Os","number":76,"category":"no categorizado","atomic_mass":190.23,"electron_configuration":"[Xe] 4f14 5d6 6s2","electron_distribution":"14 f, 6 d, 2 s en capa 6","xpos":8,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Osmio"},
+  {"name":"Iridio","symbol":"Ir","number":77,"category":"no categorizado","atomic_mass":192.22,"electron_configuration":"[Xe] 4f14 5d7 6s2","electron_distribution":"14 f, 7 d, 2 s en capa 6","xpos":9,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Iridio"},
+  {"name":"Platino","symbol":"Pt","number":78,"category":"no categorizado","atomic_mass":195.08,"electron_configuration":"[Xe] 4f14 5d9 6s1","electron_distribution":"14 f, 9 d, 1 s en capa 6","xpos":10,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Platino"},
+  {"name":"Oro","symbol":"Au","number":79,"category":"no categorizado","atomic_mass":196.97,"electron_configuration":"[Xe] 4f14 5d10 6s1","electron_distribution":"14 f, 10 d, 1 s en capa 6","xpos":11,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Oro"},
+  {"name":"Mercurio","symbol":"Hg","number":80,"category":"no categorizado","atomic_mass":200.59,"electron_configuration":"[Xe] 4f14 5d10 6s2","electron_distribution":"14 f, 10 d, 2 s en capa 6","xpos":12,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Mercurio"},
+  {"name":"Talio","symbol":"Tl","number":81,"category":"no categorizado","atomic_mass":204.38,"electron_configuration":"[Xe] 4f14 5d10 6s2 6p1","electron_distribution":"14 f, 10 d, 2 s, 1 p en capa 6","xpos":13,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Talio"},
+  {"name":"Plomo","symbol":"Pb","number":82,"category":"no categorizado","atomic_mass":207.2,"electron_configuration":"[Xe] 4f14 5d10 6s2 6p2","electron_distribution":"14 f, 10 d, 2 s, 2 p en capa 6","xpos":14,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Plomo"},
+  {"name":"Bismuto","symbol":"Bi","number":83,"category":"no categorizado","atomic_mass":208.98,"electron_configuration":"[Xe] 4f14 5d10 6s2 6p3","electron_distribution":"14 f, 10 d, 2 s, 3 p en capa 6","xpos":15,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Bismuto"},
+  {"name":"Polonio","symbol":"Po","number":84,"category":"no categorizado","atomic_mass":209,"electron_configuration":"[Xe] 4f14 5d10 6s2 6p4","electron_distribution":"14 f, 10 d, 2 s, 4 p en capa 6","xpos":16,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Polonio"},
+  {"name":"Astato","symbol":"At","number":85,"category":"no categorizado","atomic_mass":210,"electron_configuration":"[Xe] 4f14 5d10 6s2 6p5","electron_distribution":"14 f, 10 d, 2 s, 5 p en capa 6","xpos":17,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Astato"},
+  {"name":"Radón","symbol":"Rn","number":86,"category":"no categorizado","atomic_mass":222,"electron_configuration":"[Xe] 4f14 5d10 6s2 6p6","electron_distribution":"14 f, 10 d, 2 s, 6 p en capa 6","xpos":18,"ypos":6,"wikipedia":"https://es.wikipedia.org/wiki/Radón"},
+  {"name":"Francio","symbol":"Fr","number":87,"category":"no categorizado","atomic_mass":223,"electron_configuration":"[Rn] 7s1","electron_distribution":"1 s en capa 7","xpos":1,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Francio"},
+  {"name":"Radio","symbol":"Ra","number":88,"category":"no categorizado","atomic_mass":226,"electron_configuration":"[Rn] 7s2","electron_distribution":"2 s en capa 7","xpos":2,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Radio"},
+  
+  
+  // Elementos 104 al 116
+  {"name":"Rutherfordio","symbol":"Rf","number":104,"category":"no categorizado","atomic_mass":267,"electron_configuration":"[Rn] 5f14 6d2 7s2","electron_distribution":"14 f, 2 d, 2 s en capa 7","xpos":4,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Rutherfordio"},
+  {"name":"Dubnio","symbol":"Db","number":105,"category":"no categorizado","atomic_mass":270,"electron_configuration":"[Rn] 5f14 6d3 7s2","electron_distribution":"14 f, 3 d, 2 s en capa 7","xpos":5,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Dubnio"},
+  {"name":"Seaborgio","symbol":"Sg","number":106,"category":"no categorizado","atomic_mass":271,"electron_configuration":"[Rn] 5f14 6d4 7s2","electron_distribution":"14 f, 4 d, 2 s en capa 7","xpos":6,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Seaborgio"},
+  {"name":"Bohrio","symbol":"Bh","number":107,"category":"no categorizado","atomic_mass":270,"electron_configuration":"[Rn] 5f14 6d5 7s2","electron_distribution":"14 f, 5 d, 2 s en capa 7","xpos":7,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Bohrio"},
+  {"name":"Hassio","symbol":"Hs","number":108,"category":"no categorizado","atomic_mass":277,"electron_configuration":"[Rn] 5f14 6d6 7s2","electron_distribution":"14 f, 6 d, 2 s en capa 7","xpos":8,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Hassio"},
+  {"name":"Meitnerio","symbol":"Mt","number":109,"category":"no categorizado","atomic_mass":276,"electron_configuration":"[Rn] 5f14 6d7 7s2","electron_distribution":"14 f, 7 d, 2 s en capa 7","xpos":9,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Meitnerio"},
+  {"name":"Darmstadtio","symbol":"Ds","number":110,"category":"no categorizado","atomic_mass":281,"electron_configuration":"[Rn] 5f14 6d9 7s1","electron_distribution":"14 f, 9 d, 1 s en capa 7","xpos":10,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Darmstadtio"},
+  {"name":"Roentgenio","symbol":"Rg","number":111,"category":"no categorizado","atomic_mass":282,"electron_configuration":"[Rn] 5f14 6d10 7s1","electron_distribution":"14 f, 10 d, 1 s en capa 7","xpos":11,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Roentgenio"},
+  {"name":"Copernicio","symbol":"Cn","number":112,"category":"no categorizado","atomic_mass":285,"electron_configuration":"[Rn] 5f14 6d10 7s2","electron_distribution":"14 f, 10 d, 2 s en capa 7","xpos":12,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Copernicio"},
+  {"name":"Nihonio","symbol":"Nh","number":113,"category":"no categorizado","atomic_mass":286,"electron_configuration":"[Rn] 5f14 6d10 7s2 7p1","electron_distribution":"14 f, 10 d, 2 s, 1 p en capa 7","xpos":13,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Nihonio"},
+  {"name":"Flerovio","symbol":"Fl","number":114,"category":"no categorizado","atomic_mass":289,"electron_configuration":"[Rn] 5f14 6d10 7s2 7p2","electron_distribution":"14 f, 10 d, 2 s, 2 p en capa 7","xpos":14,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Flerovio"},
+  {"name":"Moscovio","symbol":"Mc","number":115,"category":"no categorizado","atomic_mass":288,"electron_configuration":"[Rn] 5f14 6d10 7s2 7p3","electron_distribution":"14 f, 10 d, 2 s, 3 p en capa 7","xpos":15,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Moscovio"},
+  {"name":"Livermorio","symbol":"Lv","number":116,"category":"no categorizado","atomic_mass":293,"electron_configuration":"[Rn] 5f14 6d10 7s2 7p4","electron_distribution":"14 f, 10 d, 2 s, 4 p en capa 7","xpos":16,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Livermorio"},
+  {"name":"Tenesino","symbol":"Ts","number":117,"category":"no categorizado","atomic_mass":294,"electron_configuration":"[Rn] 5f14 6d10 7s2 7p5","electron_distribution":"14 f, 10 d, 2 s, 5 p en capa 7","xpos":17,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Tenesino"},
+  {"name":"Oganesón","symbol":"Og","number":118,"category":"no categorizado","atomic_mass":294,"electron_configuration":"[Rn] 5f14 6d10 7s2 7p6","electron_distribution":"14 f, 10 d, 2 s, 6 p en capa 7","xpos":18,"ypos":7,"wikipedia":"https://es.wikipedia.org/wiki/Oganesón"}
+
+
+];
+//menu de inicio
+ const toggleBtn = document.getElementById('nav-toggle');
+  const navMenu = document.getElementById('nav-menu');
+
+  toggleBtn.addEventListener('click', () => {
+    navMenu.classList.toggle('show');
+  });
+  
+// Grid setup
+const filas = 10;  // filas (incluye lantánidos y actínidos)
+const columnas = 18;
+
+let grid = Array.from({length: filas * columnas}, () => null);
+
+elementos.forEach(el => {
+  // La posicion del elemento en la grid (fila-1)*columnas + (columna-1)
+  const idx = (el.ypos -1)*columnas + (el.xpos -1);
+  grid[idx] = el;
+});
+
+const tabla = document.getElementById('tabla-periodica');
+function renderTabla(){
+  tabla.innerHTML = '';
+  for(let i=0; i< filas*columnas; i++){
+    const el = grid[i];
+    const div = document.createElement('button');
+    div.setAttribute('role', 'gridcell');
+    if(el){
+      div.className = 'elemento';
+      div.innerHTML = `
+        <div class="numero">${el.number}</div>
+        <div class="simbolo">${el.symbol}</div>
+        <div class="nombre">${el.name.toLowerCase()}</div>
+      `;
+      div.dataset.index = el.number;
+      div.title = `${el.name} (${el.symbol})`;
+    } else {
+      div.className = 'empty';
+      div.disabled = true;
+      div.innerHTML = '&nbsp;';
+    }
+    tabla.appendChild(div);
+  }
+}
+renderTabla();
+
+// Modal y detalles
+const modal = document.getElementById('modal');
+const modalTitle = document.getElementById('modal-title');
+const modalNumber = document.getElementById('modal-number');
+const modalCategory = document.getElementById('modal-category');
+const modalMass = document.getElementById('modal-mass');
+const modalElectronConfig = document.getElementById('modal-electron-config');
+const modalElectronDist = document.getElementById('modal-electron-distribution');
+const modalWiki = document.getElementById('modal-wikipedia');
+const cerrarModal = document.getElementById('cerrar-modal');
+
+function abrirModal(elemento) {
+  modalTitle.textContent = `${elemento.name} (${elemento.symbol})`;
+  modalNumber.textContent = `Número atómico: ${elemento.number}`;
+  modalCategory.textContent = `Categoría: ${elemento.category}`;
+  modalMass.textContent = `Masa atómica: ${elemento.atomic_mass}`;
+  modalElectronConfig.textContent = `Configuración electrónica: ${elemento.electron_configuration}`;
+  modalElectronDist.textContent = `Distribución electrónica: ${elemento.electron_distribution}`;
+  modalWiki.href = elemento.wikipedia;
+  modalWiki.textContent = `Leer más en Wikipedia sobre ${elemento.name}`;
+  modal.classList.add('active');
+}
+
+function cerrarModalFunc() {
+  modal.classList.remove('active');
+}
+
+cerrarModal.addEventListener('click', cerrarModalFunc);
+modal.addEventListener('click', e => {
+  if(e.target === modal) cerrarModalFunc();
+});
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && modal.classList.contains('active')){
+    cerrarModalFunc();
+  }
+});
+
+// Al hacer clic en un elemento
+tabla.addEventListener('click', e => {
+  if(e.target.closest('.elemento')){
+    const btn = e.target.closest('.elemento');
+    const num = parseInt(btn.dataset.index);
+    const el = elementos.find(ele => ele.number === num);
+    if(el) abrirModal(el);
+  }
+});
+
+// Búsqueda simple (sin categorías)
+const buscador = document.getElementById('buscador');
+buscador.addEventListener('input', () => {
+  const texto = buscador.value.toLowerCase();
+  tabla.querySelectorAll('.elemento').forEach(btn => {
+    const num = parseInt(btn.dataset.index);
+    const el = elementos.find(ele => ele.number === num);
+    if(!el) return;
+
+    const coincide =
+      el.name.toLowerCase().includes(texto) ||
+      el.symbol.toLowerCase().includes(texto) ||
+      el.number.toString() === texto;
+
+    btn.style.display = coincide ? '' : 'none';
+  });
+});
+
+// Fondo de partículas
+const canvas = document.getElementById('fondo-particulas');
+const ctx = canvas.getContext('2d');
+let width, height;
+let particles = [];
+
+function resize(){
+  width = window.innerWidth;
+  height = window.innerHeight;
+  canvas.width = width;
+  canvas.height = height;
+}
+window.addEventListener('resize', resize);
+resize();
+
+class Particle {
+  constructor(){
+    this.x = Math.random() * width;
+    this.y = Math.random() * height;
+    this.size = Math.random()*2 + 1;
+    this.speedX = (Math.random() - 0.5)*0.5;
+    this.speedY = (Math.random() - 0.5)*0.5;
+    this.opacity = Math.random()*0.5 + 0.3;
+  }
+  update(){
+    this.x += this.speedX;
+    this.y += this.speedY;
+    if(this.x < 0) this.x = width;
+    if(this.x > width) this.x = 0;
+    if(this.y < 0) this.y = height;
+    if(this.y > height) this.y = 0;
+  }
+  draw(){
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(0,170,255,${this.opacity})`;
+    ctx.fill();
+  }
+}
+
+function initParticles(){
+  particles = [];
+  for(let i=0; i<100; i++){
+    particles.push(new Particle());
+  }
+}
+
+function animate(){
+  ctx.clearRect(0,0,width,height);
+  particles.forEach(p => {
+    p.update();
+    p.draw();
+  });
+  requestAnimationFrame(animate);
+}
+
+initParticles();
+animate();
+</script>
+
+</body>
+</html>

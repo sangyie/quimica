@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Plataforma de Química</title>
+    <meta name="description" content="Plataforma profesional para el aprendizaje de química con tabla periódica interactiva, conceptos y ejercicios">
+    <meta name="keywords" content="química, aprendizaje, tabla periódica, elementos, educación, ejercicios">
+    <meta property="og:title" content="Plataforma de Aprendizaje de Química">
+    <meta property="og:description" content="Plataforma profesional para el aprendizaje de química con tabla periódica interactiva, conceptos y ejercicios">
+    <meta name="twitter:title" content="Plataforma de Aprendizaje de Química">
+    <meta name="twitter:description" content="Plataforma profesional para el aprendizaje de química con tabla periódica interactiva, conceptos y ejercicios">
+
+    <script src="https://resource.trickle.so/vendor_lib/unpkg/react@18/umd/react.production.min.js"></script>
+    <script src="https://resource.trickle.so/vendor_lib/unpkg/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://resource.trickle.so/vendor_lib/unpkg/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://resource.trickle.so/vendor_lib/unpkg/lucide-static@0.516.0/font/lucide.css" rel="stylesheet">
+
+    <style type="text/tailwindcss">
+    @layer theme {
+        :root {
+            --primary-color: #3b82f6;
+            --secondary-color: #10b981;
+            --accent-color: #8b5cf6;
+            --background-dark: #0f172a;
+            --card-dark: #1e293b;
+            --text-light: #f8fafc;
+            --text-secondary-light: #cbd5e1;
+            --border-glow: #3b82f6;
+        }
+    }
+
+    @layer base {
+        body {
+            @apply bg-black text-white;
+        }
+    }
+
+    @layer components {
+        .hero-button {
+            @apply px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 border-2 hover:scale-105 shadow-lg;
+        }
+        
+        .atom-animation {
+            animation: atomFloat 3s ease-in-out infinite;
+        }
+        
+        .molecule-bounce {
+            animation: moleculeBounce 2s ease-in-out infinite;
+        }
+        
+        @keyframes atomFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        @keyframes moleculeBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .glow-effect {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+    }
+    </style>
+
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel" src="app.js"></script>
+</body>
+</html>
